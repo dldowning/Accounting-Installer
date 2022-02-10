@@ -1,0 +1,101 @@
+name: Build Pipeline
+
+on:
+  # Uncomment to run on all pushed commits and upload an artifact
+  # Prevents duplicated pipeline runs as a release also pushes a tag
+  # push:
+  #   branches:
+  #     - '**'
+  #   tags-ignore:
+  #     - '**'
+  release:
+    types:
+      - created
+
+jobs:
+  build:
+    env:
+      # PROJECT must not contain any spaces
+      PROJECT: Pease
+      APP_ID: cc50f549-0be9-4885-80b7-058660db1aaf
+      APP_PUBLISHER: Zoomer Analytics GmbH
+    if: "!contains(github.event.head_commit.message, '[skip ci]')"
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        # Use ['x86', 'x64'] if you want to additionally build 32-bit installers
+        architecture: ['x64']
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.9'
+        architecture: ${{ matrix.architecture }}
+    # - name: Install SSH key
+    #   uses: shimataro/ssh-key-action@v2
+    #   with:
+    #     key: ${{ secrets.SSH_KEY }}
+    #     name: id_rsa
+    #     known_hosts: github.com ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAq2A7hRGmdnm9tUDbO9IDSwBK6TbQa+PXYPCPy6rbTrTtw7PHkccKrpp0yVhp5HdEIcKr6pLlVDBfOLX9QUsyCOV0wzfjIJNlGEYsdlLJizHhbn2mUjvSAHQqZETYP81eFzLQNnPHt4EVVUh7VfDESU84KezmD5QlWpXLmvU31/yMf+Se8xhHTvKSCZIFImWwoG6mbUoWf9nzpIoaSjB+weqqUUmpaaasXVal72J+UX2B+2RPW3RcT0eOzQgqlJL3RKrTJvdsjE3JEAvGq3lGHSZXy28G3skua2SmVi/w4yCE6gbODqnTWlg7+wC604ydGXA8VJiS5ap43JXiUFFAaQ==
+    - name: Install Python dependencies
+      run: |
+        python -m pip install -r requirements.txt
+    - name: Create file with version stamp (Windows)
+      run: |
+        echo ${{ github.event.release.tag_name }} > ./data/version
+    - name: Replace placeholders in installer.sh (Mac)
+      shell: bash
+      run: |
+        sed -i "s/{{version_placeholder}}/${{ github.event.release.tag_name }}/" ./installer-template.sh
+        sed -i "s/{{project_placeholder}}/${{ env.PROJECT }}/" ./installer-template.sh
+    - name: Copy source, data and addin files
+      run: |
+        cp -R ./src/* ${{env.pythonLocation}}/Lib/site-packages/ -ErrorAction SilentlyContinue
+        mkdir ${{env.pythonLocation}}/data
+        cp -R ./data/* ${{env.pythonLocation}}/data/ -ErrorAction SilentlyContinue
+        mkdir ${{env.pythonLocation}}/addins
+        cp -R ./addins/* ${{env.pythonLocation}}/addins/ -ErrorAction SilentlyContinue
+    - name: set PATH for signtool
+      shell: bash
+      run: echo "C:\Program Files (x86)\Windows Kits\10\bin\10.0.18362.0\x64" >> $GITHUB_PATH
+    - name: Replace placeholders in installer.iss
+      shell: bash
+      run: |
+        sed -i "s/name_placeholder/${{ env.PROJECT }}/" .github/installer.iss
+        sed -i "s/appid_placeholder/${{ env.APP_ID }}/" .github/installer.iss
+        sed -i "s/publisher_placeholder/${{ env.APP_PUBLISHER }}/" .github/installer.iss
+    - name: Set release version string in installer.iss
+      if: github.event_name == 'release'
+      shell: bash
+      run: sed -i "s/dev/${{ github.event.release.tag_name }}/" .github/installer.iss
+    - name: Create Installer
+      run: iscc .github/installer.iss
+    - name: Code signing
+      run: signtool sign /f sign_cert_file /p ${{ secrets.code_sign_password }} .github\Output\${{ env.PROJECT }}-*.exe
+    - name: Upload artifacts
+      if: github.event_name != 'release'
+      uses: actions/upload-artifact@v2
+      with:
+        name: Installer
+        path: .github/Output
+    - name: Upload Windows Installer to GitHub Release Page
+      if: github.event_name == 'release'
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: .github/Output/${{ env.PROJECT }}-${{ github.event.release.tag_name }}.exe
+        asset_name: ${{ env.PROJECT }}-${{ github.event.release.tag_name }}-${{ matrix.architecture }}.exe
+        asset_content_type: application/zip
+    # - name: Upload Mac Installer to GitHub Release Page
+    #   if: github.event_name == 'release'
+    #   uses: actions/upload-release-asset@v1
+    #   env:
+    #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    #   with:
+    #     upload_url: ${{ github.event.release.upload_url }}
+    #     asset_path: installer-template.sh
+    #     asset_name: installer.sh
+    #     asset_content_type: application/zip
