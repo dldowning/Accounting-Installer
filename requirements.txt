@@ -1,1 +1,3 @@
-xlwings[pro]==0.26.1
+numpy
+pandas
+xlwings
