@@ -56,9 +56,6 @@ jobs:
         cp -R ./data/* ${{env.pythonLocation}}/data/ -ErrorAction SilentlyContinue
         mkdir ${{env.pythonLocation}}/addins
         cp -R ./addins/* ${{env.pythonLocation}}/addins/ -ErrorAction SilentlyContinue
-    - name: set PATH for signtool
-      shell: bash
-      run: echo "C:\Program Files (x86)\Windows Kits\10\bin\10.0.18362.0\x64" >> $GITHUB_PATH
     - name: Replace placeholders in installer.iss
       shell: bash
       run: |
@@ -71,8 +68,6 @@ jobs:
       run: sed -i "s/dev/${{ github.event.release.tag_name }}/" .github/installer.iss
     - name: Create Installer
       run: iscc .github/installer.iss
-   # - name: Code signing
-   #   run: signtool sign /f sign_cert_file /p ${{ secrets.code_sign_password }} .github\Output\${{ env.PROJECT }}-*.exe
     - name: Upload artifacts
       if: github.event_name != 'release'
       uses: actions/upload-artifact@v2
