@@ -2,7 +2,7 @@ from menu_funcs import generate
 import sys
 import os
 
-main_path = r"C:\Program Files (x86)\Accounting"
+main_path = r"data"
 
 new_summary_template_path = os.path.join(main_path, r"new_summary_template.xlsx")
 reviewers_aid_template = os.path.join(main_path, r"reviewer_aid_template.xlsx")
