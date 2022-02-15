@@ -10,8 +10,6 @@ from review_utils import get_reviewers_aid_df
 from balance_table_utils import get_balance_table
 from value_inference_utils import extract_data_for_map_dict
 from savers import (
-    save_reviewers_aid,
-    save_summary,
     save_new_summary,
     save_based_on_template,
 )
@@ -89,7 +87,7 @@ def gen_docs(
         summary_fname = os.path.join(os.path.dirname(xlsx_files[0]), "New summary.xlsx")
         if os.path.exists(summary_fname):
             os.remove(summary_fname)
-        summaries, out_paths, sheet_names = [], [], []
+        summaries, sheet_names = [], []
 
     for xlsx_path in xlsx_files:
         comp_name = os.path.basename(xlsx_path)[:-5]
