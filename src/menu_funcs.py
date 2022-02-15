@@ -18,16 +18,16 @@ from savers import (
 def check_user_inputs(acc_name_start, balance_start, date, till):
     status_line = ""
     cont = False
-    if acc_name_start is None:
+    if acc_name_start == None:
         status_line += "specify account name column; "
         cont = True
-    if balance_start is None:
+    if balance_start == None:
         status_line += "specify balance column; "
         cont = True
-    if date is None:
+    if date == None:
         status_line += "specify date; "
         cont = True
-    if till is None:
+    if till == None:
         status_line += "specify thru; "
         cont = True
 
@@ -87,7 +87,7 @@ def gen_docs(
         summary_fname = os.path.join(os.path.dirname(xlsx_files[0]), "New summary.xlsx")
         if os.path.exists(summary_fname):
             os.remove(summary_fname)
-        summaries, sheet_names = [], []
+        summaries, out_paths, sheet_names = [], [], []
 
     for xlsx_path in xlsx_files:
         comp_name = os.path.basename(xlsx_path)[:-5]
@@ -147,62 +147,64 @@ def generate(
     xlsx_files, dir_path, dict_file = get_path_data(path, func)
 
     cur_stat = "B1"
-    # try:
-    sheet[cur_stat].value = "Waiting..."
+    try:
+        sheet[cur_stat].value = "Waiting..."
 
-    if func == "map_dict":
-        dict_full_path = os.path.join(dir_path, "Dictionary.xlsx")
-        (
-            acc_num_start,
-            acc_name_start,
-            balance_start,
-            date,
-            till,
-        ) = extract_data_for_map_dict(xlsx_files)
-        mapping_dict = get_mapping_dictionary(
-            xlsx_files,
-            dictionary_template_path,
-            path=path,
-            date=date,
-            till=till,
-            balance_start=balance_start,
-            acc_name_start=acc_name_start,
-            acc_num_start=acc_num_start,
-        )
-        save_based_on_template(dictionary_template_path, mapping_dict, dict_full_path)
-        wb.close()
-        wbapp.quit()
+        if func == "map_dict":
+            dict_full_path = os.path.join(dir_path, "Dictionary.xlsx")
+            (
+                acc_num_start,
+                acc_name_start,
+                balance_start,
+                date,
+                till,
+            ) = extract_data_for_map_dict(xlsx_files)
+            mapping_dict = get_mapping_dictionary(
+                xlsx_files,
+                dictionary_template_path,
+                path=path,
+                date=date,
+                till=till,
+                balance_start=balance_start,
+                acc_name_start=acc_name_start,
+                acc_num_start=acc_num_start,
+            )
+            save_based_on_template(
+                dictionary_template_path, mapping_dict, dict_full_path
+            )
+            wb.close()
+            wbapp.quit()
 
-        os.system(f"start excel.exe {dict_full_path}")
-    else:
-        acc_num_start, acc_name_start, balance_start, date, till = list(
-            map(lambda x: sheet[x].value, ["C2", "E2", "G2", "C3", "E3"])
-        )
-        check_user_inputs(acc_name_start, balance_start, date, till)
-        if type(date) == str:
-            date = datetime.strptime(date, "%m/%d/%Y")
-        if type(till) == str:
-            till = datetime.strptime(till, "%m/%d/%Y")
-        gen_docs(
-            xlsx_files,
-            dict_file,
-            new_summary_template_path,
-            reviewers_aid_template,
-            summary_template,
-            func,
-            date,
-            till,
-            balance_start,
-            acc_name_start,
-            acc_num_start,
-        )
-        if func == "review":
-            sheet[cur_stat].value = "Review generated!"
-        elif func == "summary":
-            sheet[cur_stat].value = "Summary generated!"
-        elif func == "new_summary":
-            sheet[cur_stat].value = "Big summary generated!"
+            os.system(f"start excel.exe {dict_full_path}")
+        else:
+            acc_num_start, acc_name_start, balance_start, date, till = list(
+                map(lambda x: sheet[x].value, ["C2", "E2", "G2", "C3", "E3"])
+            )
+            check_user_inputs(acc_name_start, balance_start, date, till)
+            if type(date) == str:
+                date = datetime.strptime(date, "%m/%d/%Y")
+            if type(till) == str:
+                till = datetime.strptime(till, "%m/%d/%Y")
+            gen_docs(
+                xlsx_files,
+                dict_file,
+                new_summary_template_path,
+                reviewers_aid_template,
+                summary_template,
+                func,
+                date,
+                till,
+                balance_start,
+                acc_name_start,
+                acc_num_start,
+            )
+            if func == "review":
+                sheet[cur_stat].value = "Review generated!"
+            elif func == "summary":
+                sheet[cur_stat].value = "Summary generated!"
+            elif func == "new_summary":
+                sheet[cur_stat].value = "Big summary generated!"
 
-    # except Exception as e:
-    #    print(e)
-    #   sheet[cur_stat].value = str(e)
+    except Exception as e:
+        print(e)
+        sheet[cur_stat].value = str(e)
