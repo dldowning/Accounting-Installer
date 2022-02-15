@@ -20,16 +20,16 @@ from savers import (
 def check_user_inputs(acc_name_start, balance_start, date, till):
     status_line = ""
     cont = False
-    if acc_name_start == None:
+    if acc_name_start is None:
         status_line += "specify account name column; "
         cont = True
-    if balance_start == None:
+    if balance_start is None:
         status_line += "specify balance column; "
         cont = True
-    if date == None:
+    if date is None:
         status_line += "specify date; "
         cont = True
-    if till == None:
+    if till is None:
         status_line += "specify thru; "
         cont = True
 
