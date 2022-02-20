@@ -1,7 +1,7 @@
 import os
 import glob
 import xlwings as xw
-
+import pandas as pd
 from datetime import datetime
 
 from mapping_utils import get_mapping, get_mapping_dictionary
@@ -13,6 +13,12 @@ from savers import (
     save_new_summary,
     save_based_on_template,
 )
+
+
+def open_xlsx_file(path):
+    wbapp = xw.App(visible=True)
+    wbapp.books.open(path)
+    wbapp.books[0].close()
 
 
 def check_user_inputs(acc_name_start, balance_start, date, till):
@@ -54,10 +60,13 @@ def get_path_data(path, func):
     ]
     # raise Exception(xlsx_files)
     if func != "map_dict":
-        assert "Dictionary.xlsx" in os.listdir(
-            dir_path
-        ), f"Dictionary.xlsx does not exist in {dir_path}"
-        dict_file = os.path.join(dir_path, "Dictionary.xlsx")
+        dict_name = [
+            el
+            for el in list(map(lambda x: x[:-5], os.listdir(dir_path)))
+            if "dictionary" in el.lower()
+        ]
+        assert len(dict_name) > 0, f"Dictionary.xlsx does not exist in {dir_path}"
+        dict_file = os.path.join(dir_path, dict_name[0] + ".xlsx")
 
     if os.path.isfile(path):
         xlsx_files = [path]
@@ -87,7 +96,7 @@ def gen_docs(
         summary_fname = os.path.join(os.path.dirname(xlsx_files[0]), "New summary.xlsx")
         if os.path.exists(summary_fname):
             os.remove(summary_fname)
-        summaries, out_paths, sheet_names = [], [], []
+        summaries, sheet_names = [], []
 
     for xlsx_path in xlsx_files:
         comp_name = os.path.basename(xlsx_path)[:-5]
@@ -143,14 +152,32 @@ def generate(
     wbapp = xw.apps(xw.apps.keys()[0])
     wb = wbapp.books[0]
     sheet = wb.sheets[0]
-    path = os.path.dirname(wb.fullname)
+    wb_fullname = wb.fullname
+    path = os.path.dirname(wb_fullname)
     xlsx_files, dir_path, dict_file = get_path_data(path, func)
 
     cur_stat = "B1"
-    try:
-        sheet[cur_stat].value = "Waiting..."
+    # try:
+    sheet[cur_stat].value = "Waiting..."
 
-        if func == "map_dict":
+    if func == "map_dict":
+        if "dictionary" in os.path.basename(wb_fullname).lower():
+            mapping_dict = get_mapping_dictionary(
+                xlsx_files,
+                dictionary_template_path,
+                path=path,
+                date=sheet["C3"].value,
+                till=sheet["E3"].value,
+                balance_start=sheet["G2"].value,
+                acc_name_start=sheet["E2"].value,
+                acc_num_start=sheet["C2"].value,
+            )
+            mapping_dict = mapping_dict[4:]
+            sheet["A5"].options(
+                pd.DataFrame, header=False, index=False, expand="table"
+            ).value = mapping_dict
+            sheet[cur_stat].value = "Mapping Dictionary generated!"
+        else:
             dict_full_path = os.path.join(dir_path, "Dictionary.xlsx")
             (
                 acc_num_start,
@@ -175,36 +202,61 @@ def generate(
             wb.close()
             wbapp.quit()
 
-            os.system(f"start excel.exe {dict_full_path}")
-        else:
-            acc_num_start, acc_name_start, balance_start, date, till = list(
-                map(lambda x: sheet[x].value, ["C2", "E2", "G2", "C3", "E3"])
-            )
-            check_user_inputs(acc_name_start, balance_start, date, till)
-            if type(date) == str:
-                date = datetime.strptime(date, "%m/%d/%Y")
-            if type(till) == str:
-                till = datetime.strptime(till, "%m/%d/%Y")
-            gen_docs(
-                xlsx_files,
-                dict_file,
-                new_summary_template_path,
-                reviewers_aid_template,
-                summary_template,
-                func,
-                date,
-                till,
-                balance_start,
-                acc_name_start,
-                acc_num_start,
-            )
-            if func == "review":
-                sheet[cur_stat].value = "Review generated!"
-            elif func == "summary":
-                sheet[cur_stat].value = "Summary generated!"
-            elif func == "new_summary":
-                sheet[cur_stat].value = "Big summary generated!"
+            open_xlsx_file(dict_full_path)
+            open_xlsx_file(wb_fullname)
+    else:
+        acc_num_start, acc_name_start, balance_start, date, till = list(
+            map(lambda x: sheet[x].value, ["C2", "E2", "G2", "C3", "E3"])
+        )
+        check_user_inputs(acc_name_start, balance_start, date, till)
+        if type(date) == str:
+            date = datetime.strptime(date, "%m/%d/%Y")
+        if type(till) == str:
+            till = datetime.strptime(till, "%m/%d/%Y")
+        gen_docs(
+            xlsx_files,
+            dict_file,
+            new_summary_template_path,
+            reviewers_aid_template,
+            summary_template,
+            func,
+            date,
+            till,
+            balance_start,
+            acc_name_start,
+            acc_num_start,
+        )
+        if func == "review":
+            sheet[cur_stat].value = "Review generated!"
+        elif func == "summary":
+            sheet[cur_stat].value = "Summary generated!"
+        elif func == "new_summary":
+            sheet[cur_stat].value = "Big summary generated!"
 
-    except Exception as e:
-        print(e)
-        sheet[cur_stat].value = str(e)
+    # except Exception as e:
+    #    # raise Exception(str(e))
+    #    print(e)
+    #    sheet[cur_stat].value = str(e)
+
+
+"""if __name__ == "__main__":
+    reviewers_aid_template = (
+        r"E:\Projects\accounting\summarygen\reviewer_aid_template.xlsx"
+    )
+    summary_template = r"E:\Projects\accounting\summarygen\summary_template.xlsx"
+    new_summary_template_path = (
+        r"E:\Projects\accounting\summarygen\new_summary_template.xlsx"
+    )
+    dictionary_template_path = (
+        r"E:\Projects\accounting\summarygen\Dictionary_template.xlsx"
+    )
+    func = "review"
+    generate(
+        new_summary_template_path,
+        reviewers_aid_template,
+        summary_template,
+        dictionary_template_path,
+        func,
+    )
+"""
+

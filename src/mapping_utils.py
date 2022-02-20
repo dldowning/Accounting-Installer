@@ -83,10 +83,15 @@ def get_mapping_dictionary(
             account_data.columns[1]: "Acc Name",
         }
     )
-
-    return pd.concat([head, dictionary_template, account_data], axis=0).reset_index(
-        drop=True
+    account_data["Acc Labeled"] = np.nan
+    account_data = pd.concat(
+        [
+            account_data.reset_index(drop=True),
+            dictionary_template[["For Label Name", "Use Label", "x(12/mm)"]],
+        ],
+        1,
     )
+    return pd.concat([head, account_data], axis=0).reset_index(drop=True)
 
 
 if __name__ == "__main__":
