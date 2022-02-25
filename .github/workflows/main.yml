@@ -20,7 +20,7 @@ jobs:
       APP_ID: cc50f549-0be9-4885-80b7-058660db1aaf
       APP_PUBLISHER: Zoomer Analytics GmbH
     if: "!contains(github.event.head_commit.message, '[skip ci]')"
-    runs-on: windows-latest
+    runs-on: windows-2019
     strategy:
       matrix:
         # Use ['x86', 'x64'] if you want to additionally build 32-bit installers
