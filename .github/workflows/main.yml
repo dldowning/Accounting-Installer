@@ -16,7 +16,7 @@ jobs:
   build:
     env:
       # PROJECT must not contain any spaces
-      PROJECT: Pease
+      PROJECT: Pease_Offerings
       APP_ID: cc50f549-0be9-4885-80b7-058660db1aaf
       APP_PUBLISHER: Zoomer Analytics GmbH
     if: "!contains(github.event.head_commit.message, '[skip ci]')"
@@ -71,8 +71,8 @@ jobs:
       run: sed -i "s/dev/${{ github.event.release.tag_name }}/" .github/installer.iss
     - name: Create Installer
       run: iscc .github/installer.iss
-   # - name: Code signing
-   #   run: signtool sign /f sign_cert_file /p ${{ secrets.code_sign_password }} .github\Output\${{ env.PROJECT }}-*.exe
+    - name: Code signing
+      run: signtool sign /f sign_cert_file /p ${{ secrets.code_sign_password }} .github\Output\${{ env.PROJECT }}-*.exe
     - name: Upload artifacts
       if: github.event_name != 'release'
       uses: actions/upload-artifact@v2
