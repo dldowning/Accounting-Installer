@@ -1,3 +1,4 @@
+from http import client
 import xlwings as xw
 import pandas as pd
 import os
@@ -41,6 +42,70 @@ def save_new_summary(template_path, summaries, out_path, sheet_names):
         ws["A1"].options(
             pd.DataFrame, header=False, index=False, expand="table"
         ).value = summary
+
+        # client_data_upper_left_corner_row, 120 is the length of the footer
+        ul_row = len(summary) - 120
+
+        col_name_dict = {
+            "AA": "Amortization",
+            "AB": "Depreciation",
+            "AC": "Accrual to Cash",
+            "AD": "Nondeductible",
+            "AE": "Book Income (Loss)",
+            "K": "Ownership Percentages",
+            "L": "Beginning Tax Capital",
+            "M": "Contribution",
+            "N": "Distribution",
+            "O": "Tax Capital Subtotal",
+            "P": "Taxable Income (Loss)",
+            "Q": "Tier 1",
+            "R": "Tier 2",
+            "S": "Special Allocated Taxable Income (Loss)",
+            "T": "Ending Tax Basis",
+            "U": "Qualified Nonrecourse Debt",
+            "V": "Recourse Debt",
+            "W": "CY Allocation Percentages",
+            "X": "Ordinary Income (Loss)",
+            "Y": "Interest Income",
+            "Z": "Charitable Contributions",
+        }
+
+        for k, v in col_name_dict.items():
+            ws[k + str(ul_row)].value = v
+
+        sum_upper_cells_let = ["K", "L", "M", "N", "O", "Q", "S", "T", "V", "W"]
+        sum_upper_cells = {
+            let + str(ul_row + 3): f"=SUM({let}{ul_row+1}:{let}{ul_row+2})"
+            for let in sum_upper_cells_let
+        }
+        for k, v in sum_upper_cells.items():
+            ws[k].value = v
+
+        ws["R" + str(ul_row + 3)].value = f"=P{ul_row+3}-Q{ul_row+3}"
+        ws["X" + str(ul_row + 3)].value = f"=P{ul_row+3}-Y{ul_row+3}-Z{ul_row+3}"
+
+        ws["O" + str(ul_row + 1)].value = f"=L{ul_row+1}+M{ul_row+1}+N{ul_row+1}"
+        ws["O" + str(ul_row + 2)].value = f"=L{ul_row+2}+M{ul_row+2}+N{ul_row+2}"
+
+        ws["P" + str(ul_row + 1)].value = f"=$P${ul_row+3}*K{ul_row+1}"
+        ws["P" + str(ul_row + 2)].value = f"=$P${ul_row+3}*K{ul_row+2}"
+
+        ws["Q" + str(ul_row + 1)].value = f"=P{ul_row+1}"
+        ws["Q" + str(ul_row + 2)].value = f"=P{ul_row+2}"
+
+        ws["T" + str(ul_row + 1)].value = f"=O{ul_row+1}+S{ul_row+1}+AD{ul_row+1}"
+        ws["T" + str(ul_row + 2)].value = f"=O{ul_row+2}+S{ul_row+2}+AD{ul_row+2}"
+
+        ws["U" + str(ul_row + 1)].value = f"=P{ul_row+1}+T{ul_row+1}+AE{ul_row+1}"
+        ws["U" + str(ul_row + 2)].value = f"=P{ul_row+2}+T{ul_row+2}+AE{ul_row+2}"
+
+        ws["W" + str(ul_row + 1)].value = f"=S{ul_row+1}/$S${ul_row+3}"
+        ws["W" + str(ul_row + 2)].value = f"=S{ul_row+2}/$S${ul_row+3}"
+
+        mul_list = ["X", "Y", "Z", "AA", "AB", "AC", "AD", "AE"]
+        for char in mul_list:
+            ws[char + str(ul_row + 1)].value = f"=${char}${ul_row+3}*W{ul_row+1}"
+            ws[char + str(ul_row + 2)].value = f"=${char}${ul_row+3}*W{ul_row+2}"
 
     wb.save(out)
     wb.close()
