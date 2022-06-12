@@ -2,7 +2,8 @@ from menu_funcs import generate
 import sys
 import os
 
-main_path = os.path.join(os.getenv("LOCALAPPDATA"), "Pease", "data")
+#main_path = os.path.join(os.getenv("LOCALAPPDATA"), "Pease", "data")
+main_path = "C:/Program Files/Pease/"
 
 new_summary_template_path = os.path.join(main_path, r"new_summary_template.xlsx")
 reviewers_aid_template = os.path.join(main_path, r"reviewer_aid_template.xlsx")

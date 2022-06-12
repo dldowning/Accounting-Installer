@@ -16,7 +16,7 @@ jobs:
   build:
     env:
       # PROJECT must not contain any spaces
-      PROJECT: Pease_Offerings
+      PROJECT: Pease
       APP_ID: cc50f549-0be9-4885-80b7-058660db1aaf
       APP_PUBLISHER: Zoomer Analytics GmbH
     if: "!contains(github.event.head_commit.message, '[skip ci]')"

@@ -8,6 +8,7 @@
 ; Do not use the same AppId value in installers for other applications.
 ; (To generate a new GUID, click Tools | Generate GUID inside the IDE.)
 ; SignTool=signtool
+ArchitecturesInstallIn64BitMode=x64
 AppId={{appid_placeholder}
 AppName={#MyAppName}
 AppVersion={#MyAppVersion}
@@ -15,7 +16,7 @@ AppPublisher={#MyAppPublisher}
 AppPublisherURL={#MyAppURL}
 AppSupportURL={#MyAppURL}
 AppUpdatesURL={#MyAppURL}
-DefaultDirName={localappdata}\{#MyAppName}
+DefaultDirName={commonpf}\{#MyAppName}
 DisableDirPage=yes
 DefaultGroupName={#MyAppName}
 DisableProgramGroupPage=yes
