@@ -1,0 +1,7 @@
+By this step, your Mapping Dictionary should be filled out with groupings.
+Make sure you have your Path: setup to point to the folder you're using
+You need to change that before proceeding with this step.
+Make sure to click Save.
+This one dictionary will apply to all the TBs in this folder.
+While you have the dictionary open, click "Generate Big Summary" and give it some time. 
+It will create a new file in the folder.

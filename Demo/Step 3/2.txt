@@ -1,0 +1,9 @@
+Pick any empty folder. Put it anywhere (desktop, O:, wherever).
+Put all the TBs for your binder in it.
+Open any one of the TBs. Any one.
+Click "Generate Mapping Dictionary"
+Give it some time to calculate. It will generate a fresh dictionary.
+In the future, if you have a dictionary filled out, you can re-use it.
+You don't have to generate a new one. Just copy/paste the old one into this folder and update it.
+
+In the 
